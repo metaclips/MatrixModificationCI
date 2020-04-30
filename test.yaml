@@ -1,0 +1,7 @@
+test_task:
+  container:
+    Test:
+      matrix:
+      - image: node:latest
+      - image: node:lts
+  test_script: yarn run test
