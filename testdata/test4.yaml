@@ -1,0 +1,5 @@
+node:
+    matrix:
+      config:
+        foo: bar
+      key: value

@@ -1,131 +1,206 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
+
+type matrix struct {
+	matrix                map[string]interface{}
+	topLevelMatrixContent []map[string]interface{}
+	matrixContent         []interface{}
+}
 
 func main() {
 	file, err := readFile()
 	if err != nil {
-		log.Fatalf("error: %v", err)
+		log.Fatalf("could not read file, error: %v", err)
 	}
 
-	m := make(map[interface{}]interface{})
-	err = yaml.UnmarshalStrict(file, &m)
+	matrix := matrix{
+		topLevelMatrixContent: make([]map[string]interface{}, 0),
+		matrix:                make(map[string]interface{})}
+
+	err = yaml.Unmarshal(file, &matrix.matrix)
 	if err != nil {
-		log.Fatalf("error: %v", err)
+		log.Fatalf("could not unmarshal yaml, error: %v", err)
 	}
 
-	matrixData := make(map[interface{}]interface{})
-	content, matrix := recursiveMapChecker(&m, &matrixData)
-	contents := allocateMatrixContent(&content, matrix, &matrixData)
+	matrix.topLevelMatrixMapChecker(&matrix.matrix)
+	matrix.moveMatrixContent()
+	matrix.convertMapToArrayInterface()
 
-	d, err := yaml.Marshal(&contents)
-	if err != nil {
-		log.Fatalf("error: %v", err)
-	}
-	fmt.Printf("\n%s\n\n", string(d))
+	data := matrix.performMatrixManipulation()
+	writeFile(data)
 }
 
 func readFile() ([]byte, error) {
-	var file []byte
-	if len(os.Args) == 2 {
-		var err error
-		file, err = ioutil.ReadFile(os.Args[1])
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		return nil, errors.New("Please pass a single file name to os.Args parameter")
+	if len(os.Args) > 1 {
+		return ioutil.ReadFile(os.Args[1])
 	}
 
-	return file, nil
+	return nil, errors.New("please pass a single file name to os.Args parameter")
 }
 
-// Create a recursive function that gets matrix map content.
-func recursiveMapChecker(data *map[interface{}]interface{}, pointedData *map[interface{}]interface{}) (map[interface{}]interface{}, interface{}) {
-	config := make(map[interface{}]interface{})
-	var matrix interface{}
+func writeFile(data []map[string]interface{}) {
+	d, err := yaml.Marshal(&data)
+	if err != nil {
+		log.Fatalf("could not marshal yaml file, error: %v", err)
+	}
+
+	if len(os.Args) > 2 {
+		if err := ioutil.WriteFile(os.Args[2], d, 0644); err != nil {
+			log.Fatalln("error writing to file:", err)
+		}
+		return
+	}
+
+	fmt.Printf("\n%s\n\n", string(d))
+}
+
+// Create a recursive function that gets toplevel matrix map content.
+func (b *matrix) topLevelMatrixMapChecker(data *map[string]interface{}) {
+	var checkInterfaceArray func([]interface{})
+
+	checkInterfaceArray = func(v []interface{}) {
+		for _, e := range v {
+			switch content := e.(type) {
+			case map[string]interface{}:
+				b.topLevelMatrixMapChecker(&content)
+			case []interface{}:
+				checkInterfaceArray(content)
+			}
+		}
+	}
 
 	for key, value := range *data {
-		if key, ok := key.(string); ok && key == "matrix" {
-			// Get pointer to map interface.
-			// Note: this is assuming index of matrix i.e [key]matrix
-			// is not an array.
-			config = *pointedData
-			matrix = value
-		} else if cvalue, ok := value.(map[interface{}]interface{}); ok {
-			config[key], matrix = recursiveMapChecker(&cvalue, pointedData)
-		} else {
-			config[key] = value
+
+		switch e := value.(type) {
+		case map[string]interface{}:
+			b.topLevelMatrixMapChecker(&e)
+		case []interface{}:
+			checkInterfaceArray(e)
+		}
+
+		if key == "matrix" {
+			b.topLevelMatrixContent = append(b.topLevelMatrixContent, *data)
 		}
 	}
-
-	return config, matrix
 }
 
-func allocateMatrixContent(content *map[interface{}]interface{}, matrix interface{}, pointedData *map[interface{}]interface{}) []map[interface{}]interface{} {
-	if data, ok := matrix.([]interface{}); ok {
-		contents := make([]map[interface{}]interface{}, len(data))
+func (b *matrix) moveMatrixContent() {
+	b.matrixContent = make([]interface{}, len(b.topLevelMatrixContent))
 
-		for i, values := range data {
-
-			values, ok := values.(map[interface{}]interface{})
-			if ok {
-				for key, value := range values {
-					contents[i] = make(map[interface{}]interface{})
-					for k := range *pointedData {
-						delete(*pointedData, k)
-					}
-					(*pointedData)[key] = value
-					contents[i] = CopyMap(*content)
-					fmt.Println(contents)
-				}
-			}
-		}
-		return contents
-
-	} else if data, ok := matrix.(map[interface{}]interface{}); ok {
-		contents := make([]map[interface{}]interface{}, len(data))
-
-		var counter int
-		for _, values := range data {
-
-			values, ok := values.(map[interface{}]interface{})
-			if ok {
-				for key, value := range values {
-					contents[counter] = make(map[interface{}]interface{})
-					for k := range *pointedData {
-						delete(*pointedData, k)
-					}
-
-					(*pointedData)[key] = value
-					contents[counter] = CopyMap(*content)
-					counter++
-				}
-			}
-		}
+	for i, value := range b.topLevelMatrixContent {
+		b.matrixContent[i] = value["matrix"]
+		delete(b.topLevelMatrixContent[i], "matrix")
 	}
-
-	return nil
 }
 
-func CopyMap(m map[interface{}]interface{}) map[interface{}]interface{} {
-	content := make(map[interface{}]interface{})
-	for k, value := range m {
-		vm, ok := value.(map[interface{}]interface{})
-		if ok {
-			content[k] = CopyMap(vm)
-		} else {
-			content[k] = value
+func (b *matrix) convertMapToArrayInterface() {
+	for i, value := range b.matrixContent {
+		switch e := value.(type) {
+		case []interface{}:
+			continue
+		case map[string]interface{}:
+			b.matrixContent[i] = convertMapToArrayInterface(e)
+		default:
+			log.Fatalln("unsupported format. Exiting now.")
+		}
+	}
+}
+
+func (b *matrix) performMatrixManipulation() []map[string]interface{} {
+	nos := make([]int, len(b.matrixContent))
+	mulNo := 1
+
+	for i, value := range b.matrixContent {
+		if b, ok := value.([]interface{}); ok {
+			nos[i] = len(b)
+			if nos[i] == 0 {
+				log.Fatalln("empty interface found!!!!")
+			}
+
+			mulNo *= nos[i]
+			continue
+		}
+
+		log.Fatalln("could not get matrix content interface array. Did you call convertMapToArrayInterface?.")
+	}
+
+	values := make([]int, len(nos))
+	data := make([]map[string]interface{}, mulNo)
+
+	for i := 0; i < mulNo; i++ {
+		data[i] = b.makeCopy(values)
+		getNextIter(nos, values, 0)
+	}
+
+	return data
+}
+
+func (b matrix) makeCopy(positions []int) map[string]interface{} {
+	matrixContents := make([]*map[string]interface{}, len(b.matrixContent))
+
+	for i, pos := range positions {
+		if val, ok := b.matrixContent[i].([]interface{}); ok {
+			mapContent, ok := val[pos].(map[string]interface{})
+			if !ok {
+				log.Fatalln("error copying to top level matrix")
+			}
+
+			matrixContents[i] = &mapContent
+			for key, value := range mapContent {
+				b.topLevelMatrixContent[i][key] = value
+			}
 		}
 	}
 
-	return content
+	jsonBytes, _ := json.Marshal(b.matrix)
+
+	data := map[string]interface{}{}
+	if err := json.Unmarshal(jsonBytes, &data); err != nil {
+		log.Fatalln("could not covert back to json, err:", err)
+	}
+
+	for i, matrixContent := range matrixContents {
+		for key := range *matrixContent {
+			delete(b.topLevelMatrixContent[i], key)
+		}
+	}
+
+	return data
+}
+
+func convertMapToArrayInterface(mapContent map[string]interface{}) []interface{} {
+	data := make([]interface{}, 0)
+	for key, value := range mapContent {
+		b := map[string]interface{}{
+			key: value,
+		}
+		data = append(data, b)
+	}
+
+	return data
+}
+
+func getNextIter(no, values []int, topLevel int) {
+	if topLevel >= len(no) {
+		return
+	}
+
+	if values[topLevel]+1 >= no[topLevel] {
+		values[topLevel] = 0
+		topLevel++
+		getNextIter(no, values, topLevel)
+		return
+	}
+
+	values[topLevel]++
 }
