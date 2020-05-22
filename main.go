@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"reflect"
 
 	"gopkg.in/yaml.v3"
 )
@@ -80,7 +81,6 @@ func (b *matrix) topLevelMatrixMapChecker(data *map[string]interface{}) {
 	}
 
 	for key, value := range *data {
-
 		switch e := value.(type) {
 		case map[string]interface{}:
 			b.topLevelMatrixMapChecker(&e)
@@ -135,10 +135,25 @@ func (b *matrix) performMatrixManipulation() []map[string]interface{} {
 	}
 
 	values := make([]int, len(nos))
-	data := make([]map[string]interface{}, mulNo)
+	data := make([]map[string]interface{}, 0)
 
 	for i := 0; i < mulNo; i++ {
-		data[i] = b.makeCopy(values)
+		content := b.makeCopy(values)
+
+		// Take for example test3.yaml where there are matrix
+		// with inner matrix, this could lead to a double copy.
+		// lenData := len(data)
+		foundEqual := false
+		for j := 0; j < len(data); j++ {
+			if reflect.DeepEqual(content, data[j]) {
+				foundEqual = true
+				break
+			}
+		}
+
+		if !foundEqual {
+			data = append(data, content)
+		}
 		getNextIter(nos, values, 0)
 	}
 
