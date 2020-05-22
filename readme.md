@@ -74,15 +74,6 @@ Converted to
 - container:
       image: node:latest
   task:
-      lint_script: yarn run lint
-      name: Lint
-      node_modules_cache:
-          fingerprint_script: cat yarn.lock
-          folder: node_modules
-          populate_script: yarn install
-- container:
-      image: node:latest
-  task:
       container:
           image: node:latest
       name: Test
@@ -115,19 +106,7 @@ Converted to
           populate_script: yarn install
       only_if: $BRANCH == "master"
       publish_script: yarn run publish
-- container:
-      image: node:latest
-  task:
-      depends_on:
-        - Lint
-        - Test
-      name: Publish
-      node_modules_cache:
-          fingerprint_script: cat yarn.lock
-          folder: node_modules
-          populate_script: yarn install
-      only_if: $BRANCH == "master"
-      publish_script: yarn run publish
+
 
 ```
 
