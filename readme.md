@@ -63,49 +63,49 @@ Converted to
 ```bash
 
 - container:
-      image: node:latest
-  task:
-      lint_script: yarn run lint
-      name: Lint
-      node_modules_cache:
-          fingerprint_script: cat yarn.lock
+    image: node:latest
+    task:
+        - node_modules_cache:
           folder: node_modules
+          fingerprint_script: cat yarn.lock
           populate_script: yarn install
+        - name: Lint
+          lint_script: yarn run lint
 - container:
-      image: node:latest
-  task:
-      container:
-          image: node:latest
-      name: Test
-      node_modules_cache:
-          fingerprint_script: cat yarn.lock
+    image: node:latest
+    task:
+        - node_modules_cache:
           folder: node_modules
+          fingerprint_script: cat yarn.lock
           populate_script: yarn install
-      test_script: yarn run test
+        - name: Test
+          container:
+            - image: node:latest
+          test_script: yarn run test
 - container:
-      image: node:latest
-  task:
-      container:
-          image: node:lts
-      name: Test
-      node_modules_cache:
-          fingerprint_script: cat yarn.lock
+    image: node:latest
+    task:
+        - node_modules_cache:
           folder: node_modules
+          fingerprint_script: cat yarn.lock
           populate_script: yarn install
-      test_script: yarn run test
+        - name: Test
+          container:
+            - image: node:lts
+          test_script: yarn run test
 - container:
-      image: node:latest
-  task:
-      depends_on:
-        - Lint
-        - Test
-      name: Publish
-      node_modules_cache:
-          fingerprint_script: cat yarn.lock
+    image: node:latest
+    task:
+        - node_modules_cache:
           folder: node_modules
+          fingerprint_script: cat yarn.lock
           populate_script: yarn install
-      only_if: $BRANCH == "master"
-      publish_script: yarn run publish
+        - name: Publish
+          depends_on:
+            - Lint
+            - Test
+          only_if: $BRANCH == "master"
+          publish_script: yarn run publish
 
 
 ```
