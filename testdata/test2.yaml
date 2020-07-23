@@ -1,4 +1,0 @@
-foo:
-    matrix:
-      - name: bar
-      - name: baz

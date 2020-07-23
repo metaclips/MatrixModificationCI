@@ -1,0 +1,10 @@
+- foo:
+    - name: bar
+- foo:
+    - name1: val
+- foo:
+    - name2: val2
+- foo:
+    - fig: 1
+- foo:
+    - name: baz

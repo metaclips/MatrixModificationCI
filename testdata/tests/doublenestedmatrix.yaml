@@ -1,0 +1,8 @@
+foo:
+    matrix:
+      - - name: bar
+      - - matrix:
+            - name1: val
+            - name2: val2
+            - fig: 1
+      - - name: baz

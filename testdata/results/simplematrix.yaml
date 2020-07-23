@@ -1,0 +1,5 @@
+- node:
+    config:
+        foo: bar
+- node:
+    key: value
