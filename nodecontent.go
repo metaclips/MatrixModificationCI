@@ -169,7 +169,7 @@ func (b *nodecontent) moveMatrixContents() []yaml.Node {
 
 		equal := false
 		for _, g := range parsedData {
-			if equal = reflect.DeepEqual(g, bytes); equal == true {
+			if equal = reflect.DeepEqual(g, bytes); equal {
 				break
 			}
 		}

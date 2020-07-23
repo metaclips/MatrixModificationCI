@@ -62,13 +62,8 @@ func (b *matrix) getSequenceNodeTypes(node *yaml.Node, index uint) {
 	switch matrixContent.Kind {
 
 	case yaml.MappingNode:
-		innerMapContent := make([]*yaml.Node, 0)
-		for _, innerMapNode := range matrixContent.Content {
-			innerMapContent = append(innerMapContent, innerMapNode)
-		}
-
 		b.TopLevelMatrixContent.Content = append(b.TopLevelMatrixContent.Content[:b.topLevelMatrixLocation],
-			append(innerMapContent, b.TopLevelMatrixContent.Content[b.topLevelMatrixLocation+2:]...)...)
+			append(matrixContent.Content, b.TopLevelMatrixContent.Content[b.topLevelMatrixLocation+2:]...)...)
 
 	default:
 		*b.TopLevelMatrixContent = *matrixContent
