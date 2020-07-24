@@ -1,8 +1,12 @@
 ## Matrix CI Modifier
+[![Go Report Card](https://goreportcard.com/badge/github.com/metaclips/MatrixModificationCI)](https://goreportcard.com/report/github.com/metaclips/MatrixModificationCI)
+![Github CI](https://github.com/metaclips/MatrixModificationCI/workflows/Test/badge.svg)
+
 
 ### Preface
 
 Matrix modifier is a CI modifier. Sometimes it's useful to run the same task against different software versions. Or run different batches of tests based on an environment variable. For cases like these, the matrix modifier comes very handy. It's possible to use matrix keyword only inside of a particular task to have multiple tasks based on the original one. Each new task will be created from the original task by replacing the whole matrix YAML node with each matrix's children separately.
+
 
 ## Examples
 
@@ -131,6 +135,6 @@ If for example you want to read a test.yaml file and pass result to result.yaml.
 
 ```bash
 
-./MatrixModificationCI test.yaml result.yaml
+MatrixModificationCI test.yaml result.yaml
 
 ```
