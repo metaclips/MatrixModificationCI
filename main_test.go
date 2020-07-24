@@ -12,7 +12,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func BenchmarkMap(b *testing.B) {
+func BenchmarkYaml(b *testing.B) {
 	b.ReportAllocs()
 
 	test := `
