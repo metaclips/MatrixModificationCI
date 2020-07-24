@@ -1,6 +1,7 @@
 ## Matrix CI Modifier
-[![Go Report Card](https://goreportcard.com/badge/github.com/metaclips/MatrixModificationCI)](https://goreportcard.com/report/github.com/metaclips/MatrixModificationCI)
+[![Build Status](https://api.cirrus-ci.com/github/metaclips/MatrixModificationCI.svg)](https://cirrus-ci.com/github/metaclips/MatrixModificationCI)
 ![Github CI](https://github.com/metaclips/MatrixModificationCI/workflows/Test/badge.svg)
+[![Go Report Card](https://goreportcard.com/badge/github.com/metaclips/MatrixModificationCI)](https://goreportcard.com/report/github.com/metaclips/MatrixModificationCI)
 
 
 ### Preface
