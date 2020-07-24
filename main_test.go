@@ -96,7 +96,7 @@ func TestFiles(t *testing.T) {
 		return nil
 	}
 
-	filepath.Walk(testPath, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(testPath, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
 		}
@@ -112,4 +112,8 @@ func TestFiles(t *testing.T) {
 
 		return nil
 	})
+
+	if err != nil {
+		t.Fatalf("failed to walk file path %s", err)
+	}
 }

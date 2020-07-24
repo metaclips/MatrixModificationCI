@@ -1,12 +1,10 @@
 container:
   image: node:latest
-  
   task:
     - node_modules_cache:
       folder: node_modules
       fingerprint_script: cat yarn.lock
       populate_script: yarn install
-  
     - matrix:
       - name: Lint
         lint_script: yarn run lint

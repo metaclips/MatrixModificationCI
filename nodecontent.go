@@ -215,21 +215,21 @@ func (b *nodecontent) recopyMatrixContents() {
 	}
 }
 
-// shouldIter iterates position till possible combinations are exhausted. Iteration is done in increasing order.
+// shouldIter gets next possible combination, if possible combinations are exhausted, should iter returns false.
 func (b *nodecontent) shouldIter(pos []uint) bool {
-	for i := len(pos) - 1; i >= 0; i-- {
-		// Iterate from most significant bit side.
-		if pos[i] == b.matrixNode[i].matrixContentCount {
-			return b.getNextShiftPos(pos, uint(i))
-		}
-
-		pos[i]++
-		return true
+	i := len(pos) - 1
+	// Iterate from most significant bit side.
+	if pos[i] == b.matrixNode[i].matrixContentCount {
+		return b.getNextShiftPos(pos, uint(i))
 	}
 
-	return false
+	pos[i]++
+	return true
 }
 
+// getNextShiftPos gets next shift possible combination if the LSB is reached.
+// For 0-0-2 wher 2 is the max of the LSB the next iter becomes 0-1-0. It is assumed the 2nd
+// bit is greater than 1.
 func (b *nodecontent) getNextShiftPos(pos []uint, index uint) bool {
 	for i := len(pos) - 1; i >= 0; i-- {
 		if pos[i] == b.matrixNode[i].matrixContentCount {

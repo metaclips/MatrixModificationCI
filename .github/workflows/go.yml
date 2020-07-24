@@ -39,7 +39,7 @@ jobs:
             golangci-lint run \
             --disable-all \
             --enable govet \
-            --enable gosimple \
+            --enable gosimple  --enable staticcheck \
             --enable unconvert --enable ineffassign \
             --enable structcheck --enable goimports \
             --enable misspell  --enable golint \

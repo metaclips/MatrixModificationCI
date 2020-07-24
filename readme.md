@@ -6,7 +6,7 @@
 
 ### Preface
 
-Matrix modifier is a CI modifier which splits matrix contents into multiple nodes. [More here](https://cirrus-ci.org/guide/writing-tasks/#matrix-modification)
+Matrix modifier is a fast CI modifier which splits matrix contents into multiple nodes. [More here](https://cirrus-ci.org/guide/writing-tasks/#matrix-modification)
 
 
 ## Examples
