@@ -34,6 +34,18 @@ type matrix struct {
 }
 
 // makeConversion moves matrix content for varies matrix content types and append to top level matrix content.
+// No matter the node type, for matrix modification, we are always appending to a map, if for a sequence type given as below
+//
+// - matrix: contents
+//
+// At the toplevel the node type is a sequence which contains only a map of matrix key and contents.
+// If we are to move contents which is a scalar or any other type, we would append to the toplevel which is a sequence.
+// If the toplevel is a map, say,
+//
+//foo:
+//	matrix: content
+//
+// We are to append "contents" which could be of any type and append to toplevel matrix key-val (foo value).
 func (b *matrix) makeConversion(pos uint) {
 	kind := b.matrixContent.Kind
 
