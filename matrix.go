@@ -27,10 +27,8 @@ type matrix struct {
 	ParentMatrixContent *yaml.Node
 	matrixContent       *yaml.Node
 
-	parentLevelMatrixLocation uint // matrix location at the parent level
-	matrixContentCount        uint // amount of matrix count
-
-	linkedMatrixCount uint
+	matrixLocationAtParentLevel uint // matrix location at the parent level
+	matrixContentCount          uint // amount of matrix count
 }
 
 // makeConversion moves matrix content for varies matrix content types and append to parent level matrix content.
@@ -74,8 +72,8 @@ func (b *matrix) getSequenceNodeTypes(node *yaml.Node, index uint) {
 	switch matrixContent.Kind {
 
 	case yaml.MappingNode:
-		b.ParentMatrixContent.Content = append(b.ParentMatrixContent.Content[:b.parentLevelMatrixLocation],
-			append(matrixContent.Content, b.ParentMatrixContent.Content[b.parentLevelMatrixLocation+2:]...)...)
+		b.ParentMatrixContent.Content = append(b.ParentMatrixContent.Content[:b.matrixLocationAtParentLevel],
+			append(matrixContent.Content, b.ParentMatrixContent.Content[b.matrixLocationAtParentLevel+2:]...)...)
 
 	default:
 		*b.ParentMatrixContent = *matrixContent
@@ -110,8 +108,8 @@ func (b *matrix) getScalarNodeTypes(node *yaml.Node) {
 func (b *matrix) getMapNodeTypes(node *yaml.Node, index uint) {
 	index *= 2
 
-	b.ParentMatrixContent.Content = append(b.ParentMatrixContent.Content[:b.parentLevelMatrixLocation],
-		append([]*yaml.Node{node.Content[index], node.Content[index+1]}, b.ParentMatrixContent.Content[b.parentLevelMatrixLocation+2:]...)...)
+	b.ParentMatrixContent.Content = append(b.ParentMatrixContent.Content[:b.matrixLocationAtParentLevel],
+		append([]*yaml.Node{node.Content[index], node.Content[index+1]}, b.ParentMatrixContent.Content[b.matrixLocationAtParentLevel+2:]...)...)
 }
 
 func (b *matrix) loadBuffer() {

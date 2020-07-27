@@ -105,8 +105,8 @@ func (b *nodecontent) onMatrixFound(parentlevelNode *yaml.Node, index int) {
 		ParentMatrixContent: parentlevelNode,
 		matrixContent:       matrixContent,
 
-		parentLevelMatrixLocation: uint(index),
-		matrixContentCount:        uint(matrixContentCount), // Amount of matrix content
+		matrixLocationAtParentLevel: uint(index),
+		matrixContentCount:          uint(matrixContentCount), // Amount of matrix content
 	}
 
 	b.matrixNode = append(b.matrixNode, matrixNode)
@@ -131,8 +131,6 @@ func (b *nodecontent) copyMatrixToBuffer() {
 		}
 
 		matrixNode.copiedMatrixBuffer = matrixBuf
-
-		i += int(matrixNode.linkedMatrixCount)
 	}
 }
 
