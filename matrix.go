@@ -20,32 +20,32 @@ type matrix struct {
 	//	  - name: Lint
 	//      lint_script: yarn run lint
 	//
-	// Given the yaml as above, toplevel matrix content contains all yaml content from task,
+	// Given the yaml as above, parent level matrix content contains all yaml content from task,
 	// while matrix content are yaml content that contains matrix values.
-	// Only Toplevel matrix content is copied and saved to buffers, linked matrix are not saved to
+	// Only parent level matrix content is copied and saved to buffers, linked matrix are not saved to
 	// buffer but re-linked.
-	TopLevelMatrixContent *yaml.Node
-	matrixContent         *yaml.Node
+	ParentMatrixContent *yaml.Node
+	matrixContent       *yaml.Node
 
-	topLevelMatrixLocation uint // matrix location at the top level
-	matrixContentCount     uint // amount of matrix count
+	parentLevelMatrixLocation uint // matrix location at the parent level
+	matrixContentCount        uint // amount of matrix count
 
 	linkedMatrixCount uint
 }
 
-// makeConversion moves matrix content for varies matrix content types and append to top level matrix content.
+// makeConversion moves matrix content for varies matrix content types and append to parent level matrix content.
 // No matter the node type, for matrix modification, we are always appending to a map, if for a sequence type given as below
 //
 // - matrix: contents
 //
-// At the toplevel the node type is a sequence which contains only a map of matrix key and contents.
-// If we are to move contents which is a scalar or any other type, we would append to the toplevel which is a sequence.
-// If the toplevel is a map, say,
+// At the parent level the node type is a sequence which contains only a map of matrix key and contents.
+// If we are to move contents which is a scalar or any other type, we would append to the parent level which is a sequence.
+// If the parent level is a map, say,
 //
 //foo:
 //	matrix: content
 //
-// We are to append "contents" which could be of any type and append to toplevel matrix key-val (foo value).
+// We are to append "contents" which could be of any type and append to parent level matrix key-val (foo value).
 func (b *matrix) makeConversion(pos uint) {
 	kind := b.matrixContent.Kind
 
@@ -65,7 +65,7 @@ func (b *matrix) makeConversion(pos uint) {
 	}
 }
 
-// getSequenceNodeTypes moves sequence node types to toplevel matrix node.
+// getSequenceNodeTypes moves sequence node types to parent level matrix node.
 // If nested sequence matrix node which is to be moved is a map type, the map contents for the matrix index is moved.
 // else it's assumed to either be scalar node type or a sequence type itself and it's contents is moved.
 func (b *matrix) getSequenceNodeTypes(node *yaml.Node, index uint) {
@@ -74,16 +74,16 @@ func (b *matrix) getSequenceNodeTypes(node *yaml.Node, index uint) {
 	switch matrixContent.Kind {
 
 	case yaml.MappingNode:
-		b.TopLevelMatrixContent.Content = append(b.TopLevelMatrixContent.Content[:b.topLevelMatrixLocation],
-			append(matrixContent.Content, b.TopLevelMatrixContent.Content[b.topLevelMatrixLocation+2:]...)...)
+		b.ParentMatrixContent.Content = append(b.ParentMatrixContent.Content[:b.parentLevelMatrixLocation],
+			append(matrixContent.Content, b.ParentMatrixContent.Content[b.parentLevelMatrixLocation+2:]...)...)
 
 	default:
-		*b.TopLevelMatrixContent = *matrixContent
+		*b.ParentMatrixContent = *matrixContent
 	}
 }
 
-// getScalarNodeTypes moves scalar node type to top level.
-// If a matrix content is a scalar node type, it is assumed that the matrix toplevel content is a sequence type
+// getScalarNodeTypes moves scalar node type to parent level.
+// If a matrix content is a scalar node type, it is assumed that the matrix parent level content is a sequence type
 // or it's the only node content else could give unpredicatable output. e.g.
 //
 // foo:
@@ -102,16 +102,16 @@ func (b *matrix) getSequenceNodeTypes(node *yaml.Node, index uint) {
 //
 // foo:	name
 func (b *matrix) getScalarNodeTypes(node *yaml.Node) {
-	*b.TopLevelMatrixContent = *node
+	*b.ParentMatrixContent = *node
 }
 
-// getMapNodeTypes moves map node type to top level.
+// getMapNodeTypes moves map node type to parent level.
 // Map contents are moved key by value.
 func (b *matrix) getMapNodeTypes(node *yaml.Node, index uint) {
 	index *= 2
 
-	b.TopLevelMatrixContent.Content = append(b.TopLevelMatrixContent.Content[:b.topLevelMatrixLocation],
-		append([]*yaml.Node{node.Content[index], node.Content[index+1]}, b.TopLevelMatrixContent.Content[b.topLevelMatrixLocation+2:]...)...)
+	b.ParentMatrixContent.Content = append(b.ParentMatrixContent.Content[:b.parentLevelMatrixLocation],
+		append([]*yaml.Node{node.Content[index], node.Content[index+1]}, b.ParentMatrixContent.Content[b.parentLevelMatrixLocation+2:]...)...)
 }
 
 func (b *matrix) loadBuffer() {
@@ -124,5 +124,5 @@ func (b *matrix) loadBuffer() {
 		log.Fatalln("unable to decode gob", err)
 	}
 
-	*b.TopLevelMatrixContent = *node
+	*b.ParentMatrixContent = *node
 }

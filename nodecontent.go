@@ -83,9 +83,9 @@ func (b *nodecontent) loopMapNode(yamlNode *yaml.Node, onMatrixFound func(*yaml.
 	}
 }
 
-// onMatrixFound copies matrix contents and top level nodes to a matrix struct.
-func (b *nodecontent) onMatrixFound(toplevelNode *yaml.Node, index int) {
-	matrixContent := toplevelNode.Content[index+1]
+// onMatrixFound copies matrix contents and parent level nodes to a matrix struct.
+func (b *nodecontent) onMatrixFound(parentlevelNode *yaml.Node, index int) {
+	matrixContent := parentlevelNode.Content[index+1]
 
 	var matrixContentCount int
 
@@ -102,11 +102,11 @@ func (b *nodecontent) onMatrixFound(toplevelNode *yaml.Node, index int) {
 	}
 
 	matrixNode := &matrix{
-		TopLevelMatrixContent: toplevelNode,
-		matrixContent:         matrixContent,
+		ParentMatrixContent: parentlevelNode,
+		matrixContent:       matrixContent,
 
-		topLevelMatrixLocation: uint(index),
-		matrixContentCount:     uint(matrixContentCount), // Amount of matrix content
+		parentLevelMatrixLocation: uint(index),
+		matrixContentCount:        uint(matrixContentCount), // Amount of matrix content
 	}
 
 	b.matrixNode = append(b.matrixNode, matrixNode)
@@ -126,7 +126,7 @@ func (b *nodecontent) copyMatrixToBuffer() {
 
 		var matrixBuf bytes.Buffer
 		enc := gob.NewEncoder(&matrixBuf)
-		if err := enc.Encode(matrixNode.TopLevelMatrixContent); err != nil {
+		if err := enc.Encode(matrixNode.ParentMatrixContent); err != nil {
 			log.Fatalln("failed to encode", err)
 		}
 
@@ -136,7 +136,7 @@ func (b *nodecontent) copyMatrixToBuffer() {
 	}
 }
 
-// moveMatrixContents move matrix contents to its top level node.
+// moveMatrixContents move matrix contents to its parent level node.
 // Matrix contents are picked in increasing order and moved in backward transition.
 // Given the below matrix
 //
@@ -193,7 +193,7 @@ func (b *nodecontent) moveMatrixContents() []yaml.Node {
 	return parsedYAMLs
 }
 
-// recopyMatrixContents copies matrix contents stored in buffer back to toplevel matrix.
+// recopyMatrixContents copies matrix contents stored in buffer back to parent level matrix.
 // Most buffers are neglected if a certain buffer stores nested matrix content.
 func (b *nodecontent) recopyMatrixContents() {
 	for i := 0; i < len(b.matrixNode); i++ {
@@ -203,15 +203,15 @@ func (b *nodecontent) recopyMatrixContents() {
 
 		b.matrixNode[i].loadBuffer()
 
-		resetLinkedMatrixPointers := func(toplevelNode *yaml.Node, index int) {
-			matrixContent := toplevelNode.Content[index+1]
-			b.matrixNode[i].TopLevelMatrixContent = toplevelNode
+		resetLinkedMatrixPointers := func(parentlevelNode *yaml.Node, index int) {
+			matrixContent := parentlevelNode.Content[index+1]
+			b.matrixNode[i].ParentMatrixContent = parentlevelNode
 			b.matrixNode[i].matrixContent = matrixContent
 			// iterate loop if more matrix nodes are found, also copying the new pointers.
 			i++
 		}
 
-		b.getMatrixNodes(b.matrixNode[i].TopLevelMatrixContent, resetLinkedMatrixPointers)
+		b.getMatrixNodes(b.matrixNode[i].ParentMatrixContent, resetLinkedMatrixPointers)
 	}
 }
 
